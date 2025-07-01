@@ -26,7 +26,7 @@ public class LikeController {
         likeService.unlikePost(userId,postId);
         return ResponseEntity.ok().build();
     }
-
+    // see all the users who liked the post
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<UserSummaryDto>> likedUsers(@PathVariable Long postId){
         return ResponseEntity.ok(likeService.findAllLikedUsers(postId));
