@@ -37,7 +37,10 @@ public class Notification {
     public enum Type {
         COMMENT,
         LIKE,
-        FOLLOW
+        FOLLOW,
+        REGISTRATION,
+        PASSWORD_CHANGE,
+        PROFILE_UPDATE
     }
 
     @CreatedDate

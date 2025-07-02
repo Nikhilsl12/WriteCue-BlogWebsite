@@ -16,11 +16,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PostService postService;
+    private final NotificationService notificationService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PostService postService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
+                      PostService postService, NotificationService notificationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.postService = postService;
+        this.notificationService = notificationService;
     }
     @Transactional
     public UserResponseDto registerUser(UserRegistrationDto dto){
@@ -43,6 +46,10 @@ public class UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
+
+        // Send registration notification email
+        notificationService.notifyUserRegistration(savedUser);
+
         return toUserResponseDto(savedUser);
     }
 
@@ -50,7 +57,7 @@ public class UserService {
         // First, validate if the input is an email or username
         String usernameOrEmail = userLoginDto.getUsernameOrEmail();
         Optional<User> user;
-        
+
         if (isEmail(usernameOrEmail)) {
             // Query by email
             user = userRepository.findByEmail(usernameOrEmail);
@@ -112,6 +119,10 @@ public class UserService {
 //        }
 
         User updatedUser = userRepository.save(user);
+
+        // Send profile update notification email
+        notificationService.notifyProfileUpdate(updatedUser);
+
         return toUserResponseDto(updatedUser);
     }
 
@@ -148,7 +159,10 @@ public class UserService {
         }
 
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        // Send password change notification email
+        notificationService.notifyPasswordChange(updatedUser);
     }
 
     // Utility method to validate email format
