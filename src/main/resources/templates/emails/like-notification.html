@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Like</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #eef2f5; padding: 20px;">
+<div style="max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 8px;">
+    <h2 style="color: #F2994A;">🎉 New Like Alert</h2>
+    <p>Hey <strong th:text="${username}">User</strong>,</p>
+    <p><strong th:text="${likerName}">Someone</strong> just liked your post:</p>
+    <blockquote style="background: #f2f2f2; padding: 10px; border-left: 4px solid #F2994A; margin-top: 10px;">
+        <span th:text="${postTitle}">Post Title</span>
+    </blockquote>
+    <p>Keep creating amazing content!</p>
+    <p style="margin-top: 30px;">– The WriteCue Team</p>
+</div>
+</body>
+</html>
