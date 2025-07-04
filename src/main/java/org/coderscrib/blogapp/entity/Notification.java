@@ -31,8 +31,9 @@ public class Notification {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private Type type;
+
 
     public enum Type {
         COMMENT,

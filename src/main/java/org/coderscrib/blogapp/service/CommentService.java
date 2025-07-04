@@ -33,7 +33,7 @@ public class CommentService {
     }
 
     // post a comment.
-    public CommentResponseDto createComment(CommentCreateDto dto, Long postId, Long userId) {
+    public CommentResponseDto createComment(CommentCreateDto dto, Long userId, Long postId) {
         if (postId == null || postId <= 0) {
             throw new IllegalArgumentException("Invalid post ID");
         }

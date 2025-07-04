@@ -52,10 +52,14 @@ public class SecurityConfig {
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
         .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                .requestMatchers("/api/users/register/**", "/api/users/login/**").permitAll()
+                .requestMatchers("/error/**", "/favicon.ico", "/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 .anyRequest().authenticated()
         )
         .csrf(csrf -> csrf.disable()) // Disable CSRF
+        .cors(cors -> cors.disable()) // Disable CORS
+        .formLogin(form -> form.disable()) // Disable form login
+        .logout(logout -> logout.disable()) // Disable logout
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
         .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.sameOrigin())

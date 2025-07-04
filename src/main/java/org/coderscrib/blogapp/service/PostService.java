@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -43,7 +44,10 @@ public class PostService {
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .author(user)
+                .likes(new ArrayList<>())
+                .comments(new ArrayList<>())
                 .build();
+
         postRepository.save(post);
         return toPostResponseDto(post);
     }
