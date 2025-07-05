@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Comment</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f0f4f8; padding: 20px;">
+<div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px;">
+    <h2 style="color: #6C63FF;">💬 New Comment</h2>
+    <p>Hi <strong th:text="${username}">User</strong>,</p>
+    <p><strong th:text="${commenterName}">Someone</strong> commented on your post:</p>
+    <blockquote style="background: #f3f3f3; padding: 10px; border-left: 4px solid #6C63FF;">
+        <span th:text="${postTitle}">Post Title</span>
+    </blockquote>
+    <p>💬 <em th:text="${commentExcerpt}">Comment preview goes here...</em></p>
+    <p><a href="https://writecue.com" style="color: #6C63FF;">View and reply</a> now.</p>
+    <p style="margin-top: 30px;">Cheers,<br/>The WriteCue Team</p>
+</div>
+</body>
+</html>

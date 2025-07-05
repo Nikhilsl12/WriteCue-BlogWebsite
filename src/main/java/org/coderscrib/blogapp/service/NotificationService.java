@@ -1,42 +1,34 @@
 package org.coderscrib.blogapp.service;
 
+import jakarta.mail.MessagingException;
+
 import org.coderscrib.blogapp.entity.Notification;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
 import org.coderscrib.blogapp.repository.NotificationRepository;
-import org.coderscrib.blogapp.repository.UserRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service for managing notifications and sending email notifications.
- * This service creates notification records and triggers email sending.
- */
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+
+
 @Service
 @Transactional
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
     private final EmailService emailService;
 
-    public NotificationService(NotificationRepository notificationRepository, 
-                              UserRepository userRepository,
-                              EmailService emailService) {
+    public NotificationService(NotificationRepository notificationRepository, EmailService emailService) {
         this.notificationRepository = notificationRepository;
-        this.userRepository = userRepository;
         this.emailService = emailService;
     }
 
-    /**
-     * Creates a notification and sends an email for user registration.
-     * 
-     * @param user The newly registered user
-     */
-    public void notifyUserRegistration(User user) {
-        // Create notification record
+    public void notifyUserRegistration(User user) throws MessagingException, UnsupportedEncodingException {
         Notification notification = Notification.builder()
-                .message("Welcome to BlogApp! Your account has been successfully created.")
+                .message("Welcome to WriteCue! Your account has been successfully created.")
                 .receiver(user)
                 .type(Notification.Type.REGISTRATION)
                 .isRead(false)
@@ -44,67 +36,41 @@ public class NotificationService {
 
         notificationRepository.save(notification);
 
-        // Send email notification
         emailService.sendRegistrationEmail(user.getEmail(), user.getUsername());
     }
 
-    /**
-     * Creates a notification and sends an email for password change.
-     * 
-     * @param user The user who changed their password
-     */
-    public void notifyPasswordChange(User user) {
-        // Create notification record
+    public void notifyUserPasswordChange(User user) throws MessagingException, UnsupportedEncodingException {
         Notification notification = Notification.builder()
-                .message("Your password has been successfully changed.")
+                .message("Your WriteCue password has been successfully changed.")
                 .receiver(user)
                 .type(Notification.Type.PASSWORD_CHANGE)
                 .isRead(false)
                 .build();
 
         notificationRepository.save(notification);
-
-        // Send email notification
         emailService.sendPasswordChangeEmail(user.getEmail(), user.getUsername());
     }
 
-    /**
-     * Creates a notification and sends an email for profile update.
-     * 
-     * @param user The user who updated their profile
-     */
-    public void notifyProfileUpdate(User user) {
-        // Create notification record
+    public void notifyProfileUpdate(User user) throws MessagingException, UnsupportedEncodingException {
         Notification notification = Notification.builder()
-                .message("Your profile information has been successfully updated.")
+                .message("Your profile has been successfully updated.")
                 .receiver(user)
                 .type(Notification.Type.PROFILE_UPDATE)
                 .isRead(false)
                 .build();
 
         notificationRepository.save(notification);
-
-        // Send email notification
         emailService.sendProfileUpdateEmail(user.getEmail(), user.getUsername());
     }
 
-    /**
-     * Creates a notification and sends an email when a post receives a like.
-     * 
-     * @param post The post that was liked
-     * @param liker The user who liked the post
-     */
-    public void notifyPostLike(Post post, User liker) {
+    public void notifyPostLike(Post post, User liker) throws MessagingException, UnsupportedEncodingException {
         User postAuthor = post.getAuthor();
 
-        // Don't notify if the user likes their own post
-        if (postAuthor.getId().equals(liker.getId())) {
-            return;
-        }
+        // Don't notify if user likes own post
+        if (postAuthor.getId().equals(liker.getId())) return;
 
-        // Create notification record
-        String message = liker.getDisplayName() + " liked your post: \"" + 
-                         (post.getTitle() != null ? post.getTitle() : "Untitled") + "\"";
+        String postTitle = getPostTitle(post);
+        String message = String.format("%s liked your post: \"%s\"", liker.getDisplayName(), postTitle);
 
         Notification notification = Notification.builder()
                 .message(message)
@@ -115,34 +81,23 @@ public class NotificationService {
 
         notificationRepository.save(notification);
 
-        // Send email notification
-        String postTitle = post.getTitle() != null ? post.getTitle() : "Untitled";
         emailService.sendLikeNotificationEmail(
-            postAuthor.getEmail(), 
-            postAuthor.getUsername(), 
-            liker.getDisplayName(), 
-            postTitle
+                postAuthor.getEmail(),
+                postAuthor.getUsername(),
+                liker.getDisplayName(),
+                postTitle
         );
     }
 
-    /**
-     * Creates a notification and sends an email when a post receives a comment.
-     * 
-     * @param post The post that was commented on
-     * @param commenter The user who commented
-     * @param commentContent The content of the comment
-     */
-    public void notifyPostComment(Post post, User commenter, String commentContent) {
+    public void notifyPostComment(Post post, User commenter, String commentContent) throws MessagingException, UnsupportedEncodingException {
         User postAuthor = post.getAuthor();
 
-        // Don't notify if the user comments on their own post
-        if (postAuthor.getId().equals(commenter.getId())) {
-            return;
-        }
+        // Don't notify if user comments on own post
+        if (postAuthor.getId().equals(commenter.getId())) return;
 
-        // Create notification record
-        String message = commenter.getDisplayName() + " commented on your post: \"" + 
-                         (post.getTitle() != null ? post.getTitle() : "Untitled") + "\"";
+        String postTitle = getPostTitle(post);
+        String message = String.format("%s commented on your post: \"%s\"", commenter.getDisplayName(), postTitle);
+        String commentExcerpt = getCommentExcerpt(commentContent);
 
         Notification notification = Notification.builder()
                 .message(message)
@@ -153,18 +108,37 @@ public class NotificationService {
 
         notificationRepository.save(notification);
 
-        // Send email notification
-        String postTitle = post.getTitle() != null ? post.getTitle() : "Untitled";
-        String commentExcerpt = commentContent.length() > 100 
-                ? commentContent.substring(0, 97) + "..." 
-                : commentContent;
-
         emailService.sendCommentNotificationEmail(
-            postAuthor.getEmail(), 
-            postAuthor.getUsername(), 
-            commenter.getDisplayName(), 
-            postTitle,
-            commentExcerpt
+                postAuthor.getEmail(),
+                postAuthor.getUsername(),
+                commenter.getDisplayName(),
+                postTitle,
+                commentExcerpt
         );
     }
+    // marking as read methods
+    public void markAsRead(Long id){
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(()->new IllegalArgumentException("No notification found"));
+        notification.setRead(true);
+        notificationRepository.save(notification);
+    }
+    public void markAllAsRead(User user){
+        List<Notification> notificationList= notificationRepository.findByReceiverAndReadFalse(user);
+        for(Notification n: notificationList){
+            n.setRead(true);
+        }
+        notificationRepository.saveAll(notificationList);
+    }
+
+    // 🔁 Helpers
+
+    private String getPostTitle(Post post) {
+        return post.getTitle() != null ? post.getTitle() : "Untitled";
+    }
+
+    private String getCommentExcerpt(String comment) {
+        return comment.length() > 100 ? comment.substring(0, 97) + "..." : comment;
+    }
+
 }
