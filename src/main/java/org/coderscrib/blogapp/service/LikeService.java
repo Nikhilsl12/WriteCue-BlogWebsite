@@ -19,11 +19,14 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
 
-    public LikeService(LikeRepository likeRepository, UserRepository userRepository, PostRepository PostRepository) {
+    public LikeService(LikeRepository likeRepository, UserRepository userRepository, 
+                      PostRepository postRepository, NotificationService notificationService) {
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
-        this.postRepository = PostRepository;
+        this.postRepository = postRepository;
+        this.notificationService = notificationService;
     }
 
     //Like
@@ -41,6 +44,9 @@ public class LikeService {
                 .post(post)
                 .build();
         likeRepository.save(like);
+
+        // Send notification to post author about the like
+        notificationService.notifyPostLike(post, user);
     }
     //unlike post
     public void unlikePost(Long userId, Long postId) {

@@ -22,16 +22,18 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public CommentService(CommentRepository commentRepository, PostRepository postRepository, UserRepository userRepository) {
+    public CommentService(CommentRepository commentRepository, PostRepository postRepository, 
+                         UserRepository userRepository, NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
-
+        this.notificationService = notificationService;
     }
 
     // post a comment.
-    public CommentResponseDto createComment(CommentCreateDto dto, Long postId, Long userId) {
+    public CommentResponseDto createComment(CommentCreateDto dto, Long userId, Long postId) {
         if (postId == null || postId <= 0) {
             throw new IllegalArgumentException("Invalid post ID");
         }
@@ -52,8 +54,12 @@ public class CommentService {
                 .user(user)
                 .post(post)
                 .build();
-        commentRepository.save(comment);
-        return toCommentResponseDto(comment);
+        Comment savedComment = commentRepository.save(comment);
+
+        // Send notification to post author about the comment
+        notificationService.notifyPostComment(post, user, dto.getContent());
+
+        return toCommentResponseDto(savedComment);
     }
     // update a comment
     public CommentResponseDto updateComment(Long commentId, CommentCreateDto dto) {

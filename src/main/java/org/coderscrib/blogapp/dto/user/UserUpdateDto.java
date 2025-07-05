@@ -12,7 +12,6 @@ public class UserUpdateDto {
     private String displayName;
 
     @Email(message = "Email is invalid")
-    @NotBlank(message = "Email is required")
     private String email;
 
     private String bio;

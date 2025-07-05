@@ -1,19 +1,23 @@
 package org.coderscrib.blogapp.service;
 
 import jakarta.mail.MessagingException;
+
 import org.coderscrib.blogapp.entity.Notification;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
 import org.coderscrib.blogapp.repository.NotificationRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
+
 @Service
 @Transactional
 public class NotificationService {
+
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
 
@@ -31,6 +35,7 @@ public class NotificationService {
                 .build();
 
         notificationRepository.save(notification);
+
         emailService.sendRegistrationEmail(user.getEmail(), user.getUsername());
     }
 
@@ -135,4 +140,5 @@ public class NotificationService {
     private String getCommentExcerpt(String comment) {
         return comment.length() > 100 ? comment.substring(0, 97) + "..." : comment;
     }
+
 }

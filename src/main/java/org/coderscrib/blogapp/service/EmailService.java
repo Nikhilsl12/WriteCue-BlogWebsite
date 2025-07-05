@@ -24,6 +24,7 @@ public class EmailService {
     @Value("${app.email.sender-name}")
     private String senderName;
 
+
     public EmailService(JavaMailSender javaMailSender, TemplateEngine templateEngine) {
         this.javaMailSender = javaMailSender;
         this.templateEngine = templateEngine;

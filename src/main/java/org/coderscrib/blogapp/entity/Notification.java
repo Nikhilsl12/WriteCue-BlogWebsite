@@ -34,6 +34,7 @@ public class Notification {
     @Column(nullable = false, length = 30)
     private Type type;
 
+
     public enum Type {
         COMMENT,
         LIKE,
