@@ -1,6 +1,5 @@
 package org.coderscrib.blogapp.controller;
 
-import org.coderscrib.blogapp.repository.UserRepository;
 import org.coderscrib.blogapp.service.NotificationService;
 import org.coderscrib.blogapp.service.UserService;
 import org.springframework.http.ResponseEntity;
