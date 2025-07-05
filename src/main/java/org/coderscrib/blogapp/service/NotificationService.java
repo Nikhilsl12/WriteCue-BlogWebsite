@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 @Service
 @Transactional
@@ -109,6 +110,20 @@ public class NotificationService {
                 postTitle,
                 commentExcerpt
         );
+    }
+    // marking as read methods
+    public void markAsRead(Long id){
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(()->new IllegalArgumentException("No notification found"));
+        notification.setRead(true);
+        notificationRepository.save(notification);
+    }
+    public void markAllAsRead(User user){
+        List<Notification> notificationList= notificationRepository.findByReceiverAndReadFalse(user);
+        for(Notification n: notificationList){
+            n.setRead(true);
+        }
+        notificationRepository.saveAll(notificationList);
     }
 
     // 🔁 Helpers
