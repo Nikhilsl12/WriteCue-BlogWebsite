@@ -162,7 +162,7 @@ public class UserService {
         User updatedUser = userRepository.save(user);
 
         // Send password change notification email
-        notificationService.notifyPasswordChange(updatedUser);
+        notificationService.notifyUserPasswordChange(updatedUser);
     }
 
     // Utility method to validate email format

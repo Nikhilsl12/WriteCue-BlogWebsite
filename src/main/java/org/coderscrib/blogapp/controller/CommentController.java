@@ -1,5 +1,6 @@
 package org.coderscrib.blogapp.controller;
 
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.coderscrib.blogapp.dto.comment.CommentCreateDto;
 import org.coderscrib.blogapp.dto.comment.CommentResponseDto;
@@ -8,6 +9,7 @@ import org.coderscrib.blogapp.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.List;
 
@@ -20,7 +22,7 @@ public class CommentController {
     }
 
     @PostMapping("/user/{userId}/post/{postId}")
-    public ResponseEntity<CommentResponseDto> createComment(@RequestBody @Valid CommentCreateDto dto, @PathVariable Long userId, @PathVariable Long postId){
+    public ResponseEntity<CommentResponseDto> createComment(@RequestBody @Valid CommentCreateDto dto, @PathVariable Long userId, @PathVariable Long postId) throws MessagingException, UnsupportedEncodingException {
         CommentResponseDto response = commentService.createComment(dto,userId,postId);
         return ResponseEntity.created(URI.create("/comments/"+response.getId()))
                 .body(response);
