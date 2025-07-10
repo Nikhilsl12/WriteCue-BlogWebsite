@@ -27,6 +27,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
+        System.out.println("[DEBUG_LOG] Handling ResourceNotFoundException: " + ex.getMessage());
         return createErrorResponse(ex, HttpStatus.NOT_FOUND, request);
     }
 
@@ -40,6 +41,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Object> handleBadRequestException(
             BadRequestException ex, WebRequest request) {
+        System.out.println("[DEBUG_LOG] Handling BadRequestException: " + ex.getMessage());
         return createErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
@@ -53,6 +55,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<Object> handleConflictException(
             ConflictException ex, WebRequest request) {
+        System.out.println("[DEBUG_LOG] Handling ConflictException: " + ex.getMessage());
         return createErrorResponse(ex, HttpStatus.CONFLICT, request);
     }
 
@@ -66,6 +69,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BlogAppException.class)
     public ResponseEntity<Object> handleBlogAppException(
             BlogAppException ex, WebRequest request) {
+        System.out.println("[DEBUG_LOG] Handling BlogAppException: " + ex.getMessage());
         return createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
@@ -79,6 +83,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGlobalException(
             Exception ex, WebRequest request) {
+        System.out.println("[DEBUG_LOG] Handling general Exception: " + ex.getClass().getName() + ": " + ex.getMessage());
+        ex.printStackTrace(); // Print stack trace for debugging
         return createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
@@ -98,7 +104,7 @@ public class GlobalExceptionHandler {
         body.put("error", status.getReasonPhrase());
         body.put("message", ex.getMessage());
         body.put("path", request.getDescription(false).replace("uri=", ""));
-        
+
         return new ResponseEntity<>(body, status);
     }
 }

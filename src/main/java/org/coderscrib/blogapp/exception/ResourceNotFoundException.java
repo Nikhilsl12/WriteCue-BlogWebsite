@@ -6,14 +6,14 @@ package org.coderscrib.blogapp.exception;
  * for a given identifier.
  */
 public class ResourceNotFoundException extends BlogAppException {
-    
+
     /**
      * Constructs a new ResourceNotFoundException with null as its detail message.
      */
     public ResourceNotFoundException() {
         super();
     }
-    
+
     /**
      * Constructs a new ResourceNotFoundException with the specified detail message.
      *
@@ -22,7 +22,26 @@ public class ResourceNotFoundException extends BlogAppException {
     public ResourceNotFoundException(String message) {
         super(message);
     }
-    
+
+    /**
+     * Constructs a new ResourceNotFoundException with the specified detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause
+     */
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    /**
+     * Constructs a new ResourceNotFoundException with the specified cause.
+     *
+     * @param cause the cause
+     */
+    public ResourceNotFoundException(Throwable cause) {
+        super(cause);
+    }
+
     /**
      * Constructs a new ResourceNotFoundException with a formatted message.
      *
