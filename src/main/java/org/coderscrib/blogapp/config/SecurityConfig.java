@@ -54,6 +54,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/users/register/**", "/api/users/login/**").permitAll()
                 .requestMatchers("/error/**", "/favicon.ico", "/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/test-exceptions/**").permitAll() // Allow test endpoints for exception testing
                 .anyRequest().authenticated()
         )
         .csrf(csrf -> csrf.disable()) // Disable CSRF

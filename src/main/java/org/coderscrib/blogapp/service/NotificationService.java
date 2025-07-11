@@ -3,6 +3,7 @@ package org.coderscrib.blogapp.service;
 import org.coderscrib.blogapp.entity.Notification;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,7 +116,7 @@ public class NotificationService {
     // marking as read methods
     public void markAsRead(Long id){
         Notification notification = notificationRepository.findById(id)
-                .orElseThrow(()->new IllegalArgumentException("No notification found"));
+                .orElseThrow(() -> ResourceNotFoundException.create("Notification", "id", id));
         notification.setRead(true);
         notificationRepository.save(notification);
     }
