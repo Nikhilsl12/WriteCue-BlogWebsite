@@ -4,6 +4,7 @@ import org.coderscrib.blogapp.dto.user.UserSummaryDto;
 import org.coderscrib.blogapp.entity.Like;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.LikeRepository;
 import org.coderscrib.blogapp.repository.PostRepository;
 import org.coderscrib.blogapp.repository.UserRepository;
@@ -32,9 +33,9 @@ public class LikeService {
     //Like
     public void likePost(Long userId, Long postId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
         if(likeRepository.existsByUserAndPost(user,post)){
             throw new IllegalArgumentException("You have already liked this post");
