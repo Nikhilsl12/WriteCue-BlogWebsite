@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.coderscrib.blogapp.dto.post.PostSummaryDto;
 import org.coderscrib.blogapp.dto.user.*;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -68,7 +69,7 @@ public class UserService {
 
         // Check if the user exists
         if (user.isEmpty()) {
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new ResourceNotFoundException("Invalid username or password");
         }
 
         // Verify the password
@@ -83,7 +84,7 @@ public class UserService {
     @Transactional
     public UserResponseDto updateUser(Long userId, UserUpdateDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Update username if provided
         if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
@@ -129,19 +130,19 @@ public class UserService {
     @Transactional
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         userRepository.delete(user);
     }
 
     public UserResponseDto getUserById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return toUserResponseDto(user);
     }
     public UserResponseDto getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return toUserResponseDto(user);
     }
 //    public Page<UserResponseDto> getAllUsers(Pageable pageable) {
@@ -152,7 +153,7 @@ public class UserService {
     @Transactional
     public void changePassword(Long userId, ChangePasswordDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Incorrect old password");
