@@ -7,6 +7,7 @@ import org.coderscrib.blogapp.entity.Comment;
 import org.coderscrib.blogapp.entity.Like;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.PostRepository;
 import org.coderscrib.blogapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +39,7 @@ public class PostService {
     //Create Post
     public PostResponseDto createPost(PostCreateDto dto){
         User user = userRepository.findById(dto.getAuthorId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Post post = Post.builder()
                 .title(dto.getTitle())
@@ -54,7 +55,7 @@ public class PostService {
     // Update Post
     public PostResponseDto updatePost(Long postId,PostCreateDto dto){
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
         if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
             post.setTitle(dto.getTitle());
@@ -69,14 +70,14 @@ public class PostService {
     //Delete Post
     public void deletePost(Long postId){
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
         postRepository.delete(post);
     }
 
     // View Post
     public PostResponseDto getPostById(Long postId){
         Post post = postRepository.findById(postId)
-                .orElseThrow(()->new IllegalArgumentException("No Post Found"));
+                .orElseThrow(()->new ResourceNotFoundException("No Post Found"));
         return toPostResponseDto(post);
     }
     public Page<PostSummaryDto> getAllPosts(Pageable pageable) {
@@ -87,14 +88,14 @@ public class PostService {
     // Share Post
     public String sharePost(Long postId){
         Post post = postRepository.findById(postId)
-                .orElseThrow(()->new IllegalArgumentException("No Post Found"));
+                .orElseThrow(()->new ResourceNotFoundException("No Post Found"));
         String url = baseUrl+"/posts/"+postId;
         return url;
     }
     // view post of users by id
     public Page<PostSummaryDto> getUserPosts(Long userId, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("User not found");
+            throw new ResourceNotFoundException("User not found");
         }
         return postRepository.findByAuthor_Id(userId,pageable).map(this::toPostSummaryDto);
     }
