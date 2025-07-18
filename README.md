@@ -13,6 +13,7 @@ A RESTful API for a blog application built with Spring Boot. This application al
 - Lombok
 - Spring Boot Validation
 - Spring Boot Actuator
+- React
 
 ## Features
 
