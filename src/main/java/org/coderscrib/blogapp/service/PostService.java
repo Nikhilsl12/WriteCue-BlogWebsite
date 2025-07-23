@@ -102,7 +102,7 @@ public class PostService {
 
     // utility methods
     private PostResponseDto toPostResponseDto(Post post) {
-        if(post == null) throw new IllegalArgumentException("Post is empty");
+        if(post == null) throw new ResourceNotFoundException("Post is empty");
 
         PostResponseDto dto = new PostResponseDto();
         List<Comment> comments = post.getComments();
