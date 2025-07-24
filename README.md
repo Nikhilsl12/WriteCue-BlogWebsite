@@ -8,7 +8,7 @@ A RESTful API for a blog application built with Spring Boot. This application al
 - Spring Boot 3.4.4
 - Spring Data JPA
 - Spring Security
-- MySQL Database
+- PostgreSQL Database
 - Maven
 - Lombok
 - Spring Boot Validation
@@ -54,17 +54,18 @@ A RESTful API for a blog application built with Spring Boot. This application al
 ### Prerequisites
 
 - Java 23 or higher
-- MySQL 8.0 or higher
+- PostgreSQL 14.0 or higher
 - Maven
 
 ### Database Setup
 
-1. Create a MySQL database named `blogapplication`
+1. Create a PostgreSQL database named `blogapplication`
 2. Update the database configuration in `src/main/resources/application.properties` if needed:
    ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/blogapplication
+   spring.datasource.url=jdbc:postgresql://localhost:5432/blogapplication
    spring.datasource.username=your_username
    spring.datasource.password=your_password
+   spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
    ```
 
 ### Building and Running the Application
