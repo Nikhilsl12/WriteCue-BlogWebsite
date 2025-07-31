@@ -1,19 +1,20 @@
 package org.coderscrib.blogapp.service;
 
-import jakarta.mail.MessagingException;
 import org.coderscrib.blogapp.entity.Notification;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
+
 
 @Service
 @Transactional
 public class NotificationService {
+
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
 
@@ -22,7 +23,7 @@ public class NotificationService {
         this.emailService = emailService;
     }
 
-    public void notifyUserRegistration(User user) throws MessagingException, UnsupportedEncodingException {
+    public void notifyUserRegistration(User user) {
         Notification notification = Notification.builder()
                 .message("Welcome to WriteCue! Your account has been successfully created.")
                 .receiver(user)
@@ -31,10 +32,11 @@ public class NotificationService {
                 .build();
 
         notificationRepository.save(notification);
+
         emailService.sendRegistrationEmail(user.getEmail(), user.getUsername());
     }
 
-    public void notifyUserPasswordChange(User user) throws MessagingException, UnsupportedEncodingException {
+    public void notifyUserPasswordChange(User user) {
         Notification notification = Notification.builder()
                 .message("Your WriteCue password has been successfully changed.")
                 .receiver(user)
@@ -46,7 +48,7 @@ public class NotificationService {
         emailService.sendPasswordChangeEmail(user.getEmail(), user.getUsername());
     }
 
-    public void notifyProfileUpdate(User user) throws MessagingException, UnsupportedEncodingException {
+    public void notifyProfileUpdate(User user) {
         Notification notification = Notification.builder()
                 .message("Your profile has been successfully updated.")
                 .receiver(user)
@@ -58,7 +60,7 @@ public class NotificationService {
         emailService.sendProfileUpdateEmail(user.getEmail(), user.getUsername());
     }
 
-    public void notifyPostLike(Post post, User liker) throws MessagingException, UnsupportedEncodingException {
+    public void notifyPostLike(Post post, User liker) {
         User postAuthor = post.getAuthor();
 
         // Don't notify if user likes own post
@@ -84,7 +86,7 @@ public class NotificationService {
         );
     }
 
-    public void notifyPostComment(Post post, User commenter, String commentContent) throws MessagingException, UnsupportedEncodingException {
+    public void notifyPostComment(Post post, User commenter, String commentContent) {
         User postAuthor = post.getAuthor();
 
         // Don't notify if user comments on own post
@@ -114,12 +116,12 @@ public class NotificationService {
     // marking as read methods
     public void markAsRead(Long id){
         Notification notification = notificationRepository.findById(id)
-                .orElseThrow(()->new IllegalArgumentException("No notification found"));
+                .orElseThrow(() -> ResourceNotFoundException.create("Notification", "id", id));
         notification.setRead(true);
         notificationRepository.save(notification);
     }
     public void markAllAsRead(User user){
-        List<Notification> notificationList= notificationRepository.findByReceiverAndReadFalse(user);
+        List<Notification> notificationList= notificationRepository.findByReceiverAndIsReadFalse(user);
         for(Notification n: notificationList){
             n.setRead(true);
         }
@@ -135,4 +137,5 @@ public class NotificationService {
     private String getCommentExcerpt(String comment) {
         return comment.length() > 100 ? comment.substring(0, 97) + "..." : comment;
     }
+
 }

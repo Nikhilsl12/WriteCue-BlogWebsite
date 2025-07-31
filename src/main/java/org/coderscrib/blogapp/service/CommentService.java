@@ -6,6 +6,7 @@ import org.coderscrib.blogapp.dto.comment.CommentSummaryDto;
 import org.coderscrib.blogapp.entity.Comment;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.BadRequestException;
 import org.coderscrib.blogapp.repository.CommentRepository;
 import org.coderscrib.blogapp.repository.PostRepository;
 import org.coderscrib.blogapp.repository.UserRepository;
@@ -22,16 +23,18 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public CommentService(CommentRepository commentRepository, PostRepository postRepository, UserRepository userRepository) {
+    public CommentService(CommentRepository commentRepository, PostRepository postRepository, 
+                         UserRepository userRepository, NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
-
+        this.notificationService = notificationService;
     }
 
     // post a comment.
-    public CommentResponseDto createComment(CommentCreateDto dto, Long postId, Long userId) {
+    public CommentResponseDto createComment(CommentCreateDto dto, Long userId, Long postId) {
         if (postId == null || postId <= 0) {
             throw new IllegalArgumentException("Invalid post ID");
         }
@@ -52,13 +55,17 @@ public class CommentService {
                 .user(user)
                 .post(post)
                 .build();
-        commentRepository.save(comment);
-        return toCommentResponseDto(comment);
+        Comment savedComment = commentRepository.save(comment);
+
+        // Send notification to post author about the comment
+        notificationService.notifyPostComment(post, user, dto.getContent());
+
+        return toCommentResponseDto(savedComment);
     }
     // update a comment
     public CommentResponseDto updateComment(Long commentId, CommentCreateDto dto) {
         if (dto.getContent() == null || dto.getContent().isBlank()) {
-            throw new IllegalArgumentException("Comment content cannot be empty");
+            throw new BadRequestException("Comment content cannot be empty");
         }
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
@@ -75,7 +82,7 @@ public class CommentService {
     // see all comments on the post
     public List<CommentSummaryDto> getAllComments(Long postId){
         if (postId == null || postId <= 0) {
-            throw new IllegalArgumentException("Invalid post ID");
+            throw new BadRequestException("Invalid post ID");
         }
         postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));

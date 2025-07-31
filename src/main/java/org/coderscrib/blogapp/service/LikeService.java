@@ -4,6 +4,7 @@ import org.coderscrib.blogapp.dto.user.UserSummaryDto;
 import org.coderscrib.blogapp.entity.Like;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.LikeRepository;
 import org.coderscrib.blogapp.repository.PostRepository;
 import org.coderscrib.blogapp.repository.UserRepository;
@@ -19,19 +20,22 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
 
-    public LikeService(LikeRepository likeRepository, UserRepository userRepository, PostRepository PostRepository) {
+    public LikeService(LikeRepository likeRepository, UserRepository userRepository, 
+                      PostRepository postRepository, NotificationService notificationService) {
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
-        this.postRepository = PostRepository;
+        this.postRepository = postRepository;
+        this.notificationService = notificationService;
     }
 
     //Like
     public void likePost(Long userId, Long postId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
         if(likeRepository.existsByUserAndPost(user,post)){
             throw new IllegalArgumentException("You have already liked this post");
@@ -41,6 +45,9 @@ public class LikeService {
                 .post(post)
                 .build();
         likeRepository.save(like);
+
+        // Send notification to post author about the like
+        notificationService.notifyPostLike(post, user);
     }
     //unlike post
     public void unlikePost(Long userId, Long postId) {

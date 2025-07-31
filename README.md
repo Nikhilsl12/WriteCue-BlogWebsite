@@ -8,11 +8,12 @@ A RESTful API for a blog application built with Spring Boot. This application al
 - Spring Boot 3.4.4
 - Spring Data JPA
 - Spring Security
-- MySQL Database
+- PostgreSQL Database
 - Maven
 - Lombok
 - Spring Boot Validation
 - Spring Boot Actuator
+- React
 
 ## Features
 
@@ -39,24 +40,32 @@ A RESTful API for a blog application built with Spring Boot. This application al
   - Count likes on a post
 
 - **Notification System**
-  - Receive notifications for interactions
+  - Receive notifications for various interactions:
+    - Comment notifications when someone comments on your post
+    - Like notifications when someone likes your post
+    - Registration notifications when you create an account
+    - Password change notifications
+    - Profile update notifications
+  - Email notifications for important events
+  - Mark notifications as read individually or all at once
 
 ## Setup and Installation
 
 ### Prerequisites
 
 - Java 23 or higher
-- MySQL 8.0 or higher
+- PostgreSQL 14.0 or higher
 - Maven
 
 ### Database Setup
 
-1. Create a MySQL database named `blogapplication`
+1. Create a PostgreSQL database named `blogapplication`
 2. Update the database configuration in `src/main/resources/application.properties` if needed:
    ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/blogapplication
+   spring.datasource.url=jdbc:postgresql://localhost:5432/blogapplication
    spring.datasource.username=your_username
    spring.datasource.password=your_password
+   spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
    ```
 
 ### Building and Running the Application
@@ -109,6 +118,11 @@ A RESTful API for a blog application built with Spring Boot. This application al
 - `DELETE /api/likes/user/{userId}/post/{postId}` - Unlike a post
 - `GET /api/likes/post/{postId}` - Get users who liked a post
 - `GET /api/likes/post/{postId}/count` - Get like count for a post
+
+### Notification Endpoints
+
+- `PUT /api/notifications/{id}/mark-read` - Mark a specific notification as read
+- `PUT /api/notifications/mark-all-read` - Mark all notifications as read
 
 ## Security
 

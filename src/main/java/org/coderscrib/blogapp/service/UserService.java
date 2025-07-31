@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.coderscrib.blogapp.dto.post.PostSummaryDto;
 import org.coderscrib.blogapp.dto.user.*;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PostService postService;
+    private final NotificationService notificationService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PostService postService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
+                      PostService postService, NotificationService notificationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.postService = postService;
+        this.notificationService = notificationService;
     }
     @Transactional
     public UserResponseDto registerUser(UserRegistrationDto dto){
@@ -43,6 +47,10 @@ public class UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
+
+        // Send registration notification email
+        notificationService.notifyUserRegistration(savedUser);
+
         return toUserResponseDto(savedUser);
     }
 
@@ -50,7 +58,7 @@ public class UserService {
         // First, validate if the input is an email or username
         String usernameOrEmail = userLoginDto.getUsernameOrEmail();
         Optional<User> user;
-        
+
         if (isEmail(usernameOrEmail)) {
             // Query by email
             user = userRepository.findByEmail(usernameOrEmail);
@@ -61,7 +69,7 @@ public class UserService {
 
         // Check if the user exists
         if (user.isEmpty()) {
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new ResourceNotFoundException("Invalid username or password");
         }
 
         // Verify the password
@@ -76,7 +84,7 @@ public class UserService {
     @Transactional
     public UserResponseDto updateUser(Long userId, UserUpdateDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Update username if provided
         if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
@@ -112,25 +120,29 @@ public class UserService {
 //        }
 
         User updatedUser = userRepository.save(user);
+
+        // Send profile update notification email
+        notificationService.notifyProfileUpdate(updatedUser);
+
         return toUserResponseDto(updatedUser);
     }
 
     @Transactional
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         userRepository.delete(user);
     }
 
     public UserResponseDto getUserById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return toUserResponseDto(user);
     }
     public UserResponseDto getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return toUserResponseDto(user);
     }
 //    public Page<UserResponseDto> getAllUsers(Pageable pageable) {
@@ -141,14 +153,17 @@ public class UserService {
     @Transactional
     public void changePassword(Long userId, ChangePasswordDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Incorrect old password");
         }
 
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        // Send password change notification email
+        notificationService.notifyUserPasswordChange(updatedUser);
     }
 
     // Utility method to validate email format
