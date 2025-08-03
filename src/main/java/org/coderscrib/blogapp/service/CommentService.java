@@ -10,6 +10,8 @@ import org.coderscrib.blogapp.exception.BadRequestException;
 import org.coderscrib.blogapp.repository.CommentRepository;
 import org.coderscrib.blogapp.repository.PostRepository;
 import org.coderscrib.blogapp.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class CommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private static final Logger logger = LoggerFactory.getLogger(CommentService.class);
 
     public CommentService(CommentRepository commentRepository, PostRepository postRepository, 
                          UserRepository userRepository, NotificationService notificationService) {
@@ -59,7 +62,7 @@ public class CommentService {
 
         // Send notification to post author about the comment
         notificationService.notifyPostComment(post, user, dto.getContent());
-
+        logger.info("User {} commented on post {}", user.getUsername(), post.getTitle());
         return toCommentResponseDto(savedComment);
     }
     // update a comment
@@ -71,12 +74,14 @@ public class CommentService {
                 .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
         comment.setContent(dto.getContent());
         commentRepository.save(comment);
+        logger.info("User {} updated comment {}", comment.getUser().getUsername(), comment.getContent());
         return toCommentResponseDto(comment);
     }
     // see a comment
     public CommentResponseDto getCommentById(Long commentId){
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(()->new IllegalArgumentException("No Comment Found"));
+        logger.info("User {} viewed comment {}", comment.getUser().getUsername(), comment.getContent());
         return toCommentResponseDto(comment);
     }
     // see all comments on the post
@@ -86,6 +91,7 @@ public class CommentService {
         }
         postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        logger.info("User viewed all comments on post {}", postId);
         return Optional.ofNullable(commentRepository.findByPostId(postId))
                 .orElse(Collections.emptyList())
                 .stream()
@@ -97,6 +103,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(()-> new IllegalArgumentException("No comment found"));
         commentRepository.delete(comment);
+        logger.info("User {} deleted comment {}", comment.getUser().getUsername(), comment.getContent());
     }
 
     // Utility Methods
