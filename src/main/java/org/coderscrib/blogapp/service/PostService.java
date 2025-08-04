@@ -10,6 +10,8 @@ import org.coderscrib.blogapp.entity.User;
 import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.PostRepository;
 import org.coderscrib.blogapp.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +29,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
     public PostService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
@@ -50,6 +53,7 @@ public class PostService {
                 .build();
 
         postRepository.save(post);
+        logger.info("Post created with id {}", post.getId());
         return toPostResponseDto(post);
     }
     // Update Post
@@ -65,12 +69,14 @@ public class PostService {
         }
 
         postRepository.save(post);
+        logger.info("Post updated with id {}", post.getId());
         return toPostResponseDto(post);
     }
     //Delete Post
     public void deletePost(Long postId){
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        logger.info("Post deleted with id {}", post.getId());
         postRepository.delete(post);
     }
 
@@ -78,9 +84,11 @@ public class PostService {
     public PostResponseDto getPostById(Long postId){
         Post post = postRepository.findById(postId)
                 .orElseThrow(()->new ResourceNotFoundException("No Post Found"));
+        logger.info("Post found with id {}", post.getId());
         return toPostResponseDto(post);
     }
     public Page<PostSummaryDto> getAllPosts(Pageable pageable) {
+        logger.info("Getting all posts with page {}", pageable.getPageNumber());
         return postRepository.findAll(pageable)
                 .map(this::toPostSummaryDto);
     }
@@ -90,6 +98,7 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(()->new ResourceNotFoundException("No Post Found"));
         String url = baseUrl+"/posts/"+postId;
+        logger.info("Post share with id {}", post.getId());
         return url;
     }
     // view post of users by id
@@ -97,6 +106,7 @@ public class PostService {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User not found");
         }
+        logger.info("Getting user posts of user {} with page {}", userId, pageable.getPageNumber());
         return postRepository.findByAuthor_Id(userId,pageable).map(this::toPostSummaryDto);
     }
 
