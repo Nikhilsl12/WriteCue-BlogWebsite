@@ -5,6 +5,9 @@ import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
 import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.NotificationRepository;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     public NotificationService(NotificationRepository notificationRepository, EmailService emailService) {
         this.notificationRepository = notificationRepository;
@@ -32,7 +36,7 @@ public class NotificationService {
                 .build();
 
         notificationRepository.save(notification);
-
+        logger.info("Notification sent for registration of user with id {}", user.getId());
         emailService.sendRegistrationEmail(user.getEmail(), user.getUsername());
     }
 
@@ -45,6 +49,7 @@ public class NotificationService {
                 .build();
 
         notificationRepository.save(notification);
+        logger.info("Notification sent for password change of user with id {}", user.getId());
         emailService.sendPasswordChangeEmail(user.getEmail(), user.getUsername());
     }
 
@@ -57,6 +62,7 @@ public class NotificationService {
                 .build();
 
         notificationRepository.save(notification);
+        logger.info("Notification sent for profile update of user with id {}", user.getId());
         emailService.sendProfileUpdateEmail(user.getEmail(), user.getUsername());
     }
 
@@ -84,6 +90,7 @@ public class NotificationService {
                 liker.getDisplayName(),
                 postTitle
         );
+        logger.info("Notification sent for like of post with id {}", post.getId());
     }
 
     public void notifyPostComment(Post post, User commenter, String commentContent) {
@@ -112,6 +119,7 @@ public class NotificationService {
                 postTitle,
                 commentExcerpt
         );
+        logger.info("Notification sent for comment on post with id {}", post.getId());
     }
     // marking as read methods
     public void markAsRead(Long id){
@@ -119,6 +127,7 @@ public class NotificationService {
                 .orElseThrow(() -> ResourceNotFoundException.create("Notification", "id", id));
         notification.setRead(true);
         notificationRepository.save(notification);
+        logger.info("User {} marked notification {} as read", notification.getReceiver().getUsername(), id);
     }
     public void markAllAsRead(User user){
         List<Notification> notificationList= notificationRepository.findByReceiverAndIsReadFalse(user);
@@ -126,6 +135,7 @@ public class NotificationService {
             n.setRead(true);
         }
         notificationRepository.saveAll(notificationList);
+        logger.info("User {} marked all notifications as read", user.getUsername());
     }
 
     // 🔁 Helpers
