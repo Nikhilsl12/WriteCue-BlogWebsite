@@ -38,79 +38,147 @@ public class CommentService {
 
     // post a comment.
     public CommentResponseDto createComment(CommentCreateDto dto, Long userId, Long postId) {
+        logger.info("Attempting to create comment for post ID: {} by user ID: {}", postId, userId);
+        
         if (postId == null || postId <= 0) {
+            logger.warn("Comment creation failed: Invalid post ID: {}", postId);
             throw new IllegalArgumentException("Invalid post ID");
         }
         if (userId == null || userId <= 0) {
+            logger.warn("Comment creation failed: Invalid user ID: {}", userId);
             throw new IllegalArgumentException("Invalid user ID");
         }
         if (dto.getContent() == null || dto.getContent().isBlank()) {
+            logger.warn("Comment creation failed: Empty content provided by user ID: {}", userId);
             throw new IllegalArgumentException("Comment content cannot be empty");
         }
 
+        logger.debug("Retrieving post with ID: {}", postId);
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> {
+                    logger.warn("Comment creation failed: Post not found with ID: {}", postId);
+                    return new IllegalArgumentException("Post not found");
+                });
+                
+        logger.debug("Retrieving user with ID: {}", userId);
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> {
+                    logger.warn("Comment creation failed: User not found with ID: {}", userId);
+                    return new IllegalArgumentException("User not found");
+                });
 
+        logger.debug("Building comment entity");
         Comment comment = Comment.builder()
                 .content(dto.getContent())
                 .user(user)
                 .post(post)
                 .build();
+                
         Comment savedComment = commentRepository.save(comment);
+        logger.info("Comment created successfully: ID {}, by user: {}, on post: {}", 
+                savedComment.getId(), user.getUsername(), post.getTitle());
 
         // Send notification to post author about the comment
+        logger.debug("Sending notification to post author about the comment");
         notificationService.notifyPostComment(post, user, dto.getContent());
-        logger.info("User {} commented on post {}", user.getUsername(), post.getTitle());
+        
         return toCommentResponseDto(savedComment);
     }
     // update a comment
     public CommentResponseDto updateComment(Long commentId, CommentCreateDto dto) {
+        logger.info("Attempting to update comment with ID: {}", commentId);
+        
         if (dto.getContent() == null || dto.getContent().isBlank()) {
+            logger.warn("Comment update failed: Empty content provided for comment ID: {}", commentId);
             throw new BadRequestException("Comment content cannot be empty");
         }
+        
+        logger.debug("Retrieving comment with ID: {}", commentId);
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+                .orElseThrow(() -> {
+                    logger.warn("Comment update failed: Comment not found with ID: {}", commentId);
+                    return new IllegalArgumentException("Comment not found");
+                });
+                
+        logger.debug("Updating comment content for comment ID: {}", commentId);
         comment.setContent(dto.getContent());
-        commentRepository.save(comment);
-        logger.info("User {} updated comment {}", comment.getUser().getUsername(), comment.getContent());
-        return toCommentResponseDto(comment);
+        Comment updatedComment = commentRepository.save(comment);
+        
+        logger.info("Comment updated successfully: ID {}, by user: {}", 
+                updatedComment.getId(), comment.getUser().getUsername());
+        return toCommentResponseDto(updatedComment);
     }
     // see a comment
     public CommentResponseDto getCommentById(Long commentId){
+        logger.info("Retrieving comment by ID: {}", commentId);
+        
+        logger.debug("Searching for comment with ID: {}", commentId);
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(()->new IllegalArgumentException("No Comment Found"));
-        logger.info("User {} viewed comment {}", comment.getUser().getUsername(), comment.getContent());
+                .orElseThrow(() -> {
+                    logger.warn("Comment retrieval failed: Comment not found with ID: {}", commentId);
+                    return new IllegalArgumentException("No Comment Found");
+                });
+                
+        logger.debug("Comment found: ID {}, by user: {}", comment.getId(), comment.getUser().getUsername());
         return toCommentResponseDto(comment);
     }
     // see all comments on the post
     public List<CommentSummaryDto> getAllComments(Long postId){
+        logger.info("Retrieving all comments for post ID: {}", postId);
+        
         if (postId == null || postId <= 0) {
+            logger.warn("Comment retrieval failed: Invalid post ID: {}", postId);
             throw new BadRequestException("Invalid post ID");
         }
+        
+        logger.debug("Verifying post exists with ID: {}", postId);
         postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
-        logger.info("User viewed all comments on post {}", postId);
-        return Optional.ofNullable(commentRepository.findByPostId(postId))
+                .orElseThrow(() -> {
+                    logger.warn("Comment retrieval failed: Post not found with ID: {}", postId);
+                    return new IllegalArgumentException("Post not found");
+                });
+                
+        logger.debug("Fetching comments for post ID: {}", postId);
+        List<CommentSummaryDto> comments = Optional.ofNullable(commentRepository.findByPostId(postId))
                 .orElse(Collections.emptyList())
                 .stream()
                 .map(this::toCommentSummaryDto)
                 .toList();
+                
+        logger.debug("Retrieved {} comments for post ID: {}", comments.size(), postId);
+        return comments;
     }
     // delete a comment
     public void deleteComment(Long commentId){
+        logger.info("Attempting to delete comment with ID: {}", commentId);
+        
+        logger.debug("Retrieving comment with ID: {}", commentId);
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(()-> new IllegalArgumentException("No comment found"));
+                .orElseThrow(() -> {
+                    logger.warn("Comment deletion failed: Comment not found with ID: {}", commentId);
+                    return new IllegalArgumentException("No comment found");
+                });
+        
+        String username = comment.getUser().getUsername();
+        Long postId = comment.getPost().getId();
+        
+        logger.debug("Deleting comment ID: {} by user: {} on post ID: {}", commentId, username, postId);
         commentRepository.delete(comment);
-        logger.info("User {} deleted comment {}", comment.getUser().getUsername(), comment.getContent());
+        
+        logger.info("Comment deleted successfully: ID {}, by user: {}", commentId, username);
     }
 
     // Utility Methods
     private CommentResponseDto toCommentResponseDto(Comment comment) {
-        if(comment==null) throw new IllegalArgumentException("Comment is not found or is null");
-
-        return CommentResponseDto.builder()
+        logger.debug("Converting Comment entity to CommentResponseDto");
+        
+        if(comment == null) {
+            logger.error("Failed to convert Comment to DTO: Comment is null");
+            throw new IllegalArgumentException("Comment is not found or is null");
+        }
+        
+        logger.debug("Building CommentResponseDto for comment ID: {}", comment.getId());
+        CommentResponseDto dto = CommentResponseDto.builder()
                 .id(comment.getId())
                 .postId(comment.getPost().getId())
                 .userId(comment.getUser().getId())
@@ -118,14 +186,28 @@ public class CommentService {
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
                 .build();
+                
+        logger.debug("Comment entity successfully converted to DTO: Comment ID {}", comment.getId());
+        return dto;
     }
+    
     private CommentSummaryDto toCommentSummaryDto(Comment comment) {
-        if(comment==null) throw new IllegalArgumentException("Comment is not found or is null");
-        return CommentSummaryDto.builder()
+        logger.debug("Converting Comment entity to CommentSummaryDto");
+        
+        if(comment == null) {
+            logger.error("Failed to convert Comment to Summary DTO: Comment is null");
+            throw new IllegalArgumentException("Comment is not found or is null");
+        }
+        
+        logger.debug("Building CommentSummaryDto for comment ID: {}", comment.getId());
+        CommentSummaryDto dto = CommentSummaryDto.builder()
                 .displayName(comment.getUser().getDisplayName())
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .build();
+                
+        logger.debug("Comment entity successfully converted to Summary DTO: Comment ID {}", comment.getId());
+        return dto;
     }
 
 }
