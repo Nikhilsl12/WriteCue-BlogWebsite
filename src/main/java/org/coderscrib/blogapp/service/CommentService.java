@@ -7,6 +7,7 @@ import org.coderscrib.blogapp.entity.Comment;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
 import org.coderscrib.blogapp.exception.BadRequestException;
+import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.CommentRepository;
 import org.coderscrib.blogapp.repository.PostRepository;
 import org.coderscrib.blogapp.repository.UserRepository;
@@ -42,29 +43,29 @@ public class CommentService {
         
         if (postId == null || postId <= 0) {
             logger.warn("Comment creation failed: Invalid post ID: {}", postId);
-            throw new IllegalArgumentException("Invalid post ID");
+            throw new BadRequestException("Invalid post ID");
         }
         if (userId == null || userId <= 0) {
             logger.warn("Comment creation failed: Invalid user ID: {}", userId);
-            throw new IllegalArgumentException("Invalid user ID");
+            throw new BadRequestException("Invalid user ID");
         }
         if (dto.getContent() == null || dto.getContent().isBlank()) {
             logger.warn("Comment creation failed: Empty content provided by user ID: {}", userId);
-            throw new IllegalArgumentException("Comment content cannot be empty");
+            throw new BadRequestException("Comment content cannot be empty");
         }
 
         logger.debug("Retrieving post with ID: {}", postId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> {
                     logger.warn("Comment creation failed: Post not found with ID: {}", postId);
-                    return new IllegalArgumentException("Post not found");
+                    return ResourceNotFoundException.create("Post", "id", postId);
                 });
                 
         logger.debug("Retrieving user with ID: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.warn("Comment creation failed: User not found with ID: {}", userId);
-                    return new IllegalArgumentException("User not found");
+                    return ResourceNotFoundException.create("User", "id", userId);
                 });
 
         logger.debug("Building comment entity");
@@ -88,6 +89,11 @@ public class CommentService {
     public CommentResponseDto updateComment(Long commentId, CommentCreateDto dto) {
         logger.info("Attempting to update comment with ID: {}", commentId);
         
+        if (commentId == null || commentId <= 0) {
+            logger.warn("Comment update failed: Invalid comment ID: {}", commentId);
+            throw new BadRequestException("Invalid comment ID");
+        }
+        
         if (dto.getContent() == null || dto.getContent().isBlank()) {
             logger.warn("Comment update failed: Empty content provided for comment ID: {}", commentId);
             throw new BadRequestException("Comment content cannot be empty");
@@ -97,7 +103,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> {
                     logger.warn("Comment update failed: Comment not found with ID: {}", commentId);
-                    return new IllegalArgumentException("Comment not found");
+                    return ResourceNotFoundException.create("Comment", "id", commentId);
                 });
                 
         logger.debug("Updating comment content for comment ID: {}", commentId);
@@ -112,11 +118,16 @@ public class CommentService {
     public CommentResponseDto getCommentById(Long commentId){
         logger.info("Retrieving comment by ID: {}", commentId);
         
+        if (commentId == null || commentId <= 0) {
+            logger.warn("Comment retrieval failed: Invalid comment ID: {}", commentId);
+            throw new BadRequestException("Invalid comment ID");
+        }
+        
         logger.debug("Searching for comment with ID: {}", commentId);
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> {
                     logger.warn("Comment retrieval failed: Comment not found with ID: {}", commentId);
-                    return new IllegalArgumentException("No Comment Found");
+                    return ResourceNotFoundException.create("Comment", "id", commentId);
                 });
                 
         logger.debug("Comment found: ID {}, by user: {}", comment.getId(), comment.getUser().getUsername());
@@ -135,7 +146,7 @@ public class CommentService {
         postRepository.findById(postId)
                 .orElseThrow(() -> {
                     logger.warn("Comment retrieval failed: Post not found with ID: {}", postId);
-                    return new IllegalArgumentException("Post not found");
+                    return ResourceNotFoundException.create("Post", "id", postId);
                 });
                 
         logger.debug("Fetching comments for post ID: {}", postId);
@@ -152,11 +163,16 @@ public class CommentService {
     public void deleteComment(Long commentId){
         logger.info("Attempting to delete comment with ID: {}", commentId);
         
+        if (commentId == null || commentId <= 0) {
+            logger.warn("Comment deletion failed: Invalid comment ID: {}", commentId);
+            throw new BadRequestException("Invalid comment ID");
+        }
+        
         logger.debug("Retrieving comment with ID: {}", commentId);
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> {
                     logger.warn("Comment deletion failed: Comment not found with ID: {}", commentId);
-                    return new IllegalArgumentException("No comment found");
+                    return ResourceNotFoundException.create("Comment", "id", commentId);
                 });
         
         String username = comment.getUser().getUsername();
@@ -174,7 +190,7 @@ public class CommentService {
         
         if(comment == null) {
             logger.error("Failed to convert Comment to DTO: Comment is null");
-            throw new IllegalArgumentException("Comment is not found or is null");
+            throw new BadRequestException("Comment is not found or is null");
         }
         
         logger.debug("Building CommentResponseDto for comment ID: {}", comment.getId());
@@ -196,7 +212,7 @@ public class CommentService {
         
         if(comment == null) {
             logger.error("Failed to convert Comment to Summary DTO: Comment is null");
-            throw new IllegalArgumentException("Comment is not found or is null");
+            throw new BadRequestException("Comment is not found or is null");
         }
         
         logger.debug("Building CommentSummaryDto for comment ID: {}", comment.getId());
