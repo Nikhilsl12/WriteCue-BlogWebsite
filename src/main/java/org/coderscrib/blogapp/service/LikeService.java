@@ -4,6 +4,8 @@ import org.coderscrib.blogapp.dto.user.UserSummaryDto;
 import org.coderscrib.blogapp.entity.Like;
 import org.coderscrib.blogapp.entity.Post;
 import org.coderscrib.blogapp.entity.User;
+import org.coderscrib.blogapp.exception.BadRequestException;
+import org.coderscrib.blogapp.exception.ConflictException;
 import org.coderscrib.blogapp.exception.ResourceNotFoundException;
 import org.coderscrib.blogapp.repository.LikeRepository;
 import org.coderscrib.blogapp.repository.PostRepository;
@@ -23,7 +25,7 @@ public class LikeService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final NotificationService notificationService;
-    private final Logger logger = LoggerFactory.getLogger(LikeService.class);
+    private static final Logger logger = LoggerFactory.getLogger(LikeService.class);
 
     public LikeService(LikeRepository likeRepository, UserRepository userRepository, 
                       PostRepository postRepository, NotificationService notificationService) {
@@ -41,20 +43,20 @@ public class LikeService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.warn("Like operation failed: User not found with ID: {}", userId);
-                    return new ResourceNotFoundException("User not found");
+                    return ResourceNotFoundException.create("User", "id", userId);
                 });
                 
         logger.debug("Retrieving post with ID: {}", postId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> {
                     logger.warn("Like operation failed: Post not found with ID: {}", postId);
-                    return new ResourceNotFoundException("Post not found");
+                    return ResourceNotFoundException.create("Post", "id", postId);
                 });
 
         logger.debug("Checking if user already liked the post");
         if(likeRepository.existsByUserAndPost(user, post)){
             logger.warn("Like operation failed: User {} already liked post {}", user.getUsername(), post.getTitle());
-            throw new IllegalArgumentException("You have already liked this post");
+            throw new ConflictException("You have already liked this post");
         }
         
         logger.debug("Creating like entity for user: {} on post: {}", user.getUsername(), post.getTitle());
@@ -78,14 +80,14 @@ public class LikeService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.warn("Unlike operation failed: User not found with ID: {}", userId);
-                    return new IllegalArgumentException("User not found");
+                    return ResourceNotFoundException.create("User", "id", userId);
                 });
                 
         logger.debug("Retrieving post with ID: {}", postId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> {
                     logger.warn("Unlike operation failed: Post not found with ID: {}", postId);
-                    return new IllegalArgumentException("Post not found");
+                    return ResourceNotFoundException.create("Post", "id", postId);
                 });
                 
         logger.debug("Checking if user has liked the post");
@@ -93,7 +95,7 @@ public class LikeService {
         
         if(like.isEmpty()){
             logger.warn("Unlike operation failed: User {} has not liked post {}", user.getUsername(), post.getTitle());
-            throw new IllegalArgumentException("You have not liked this post");
+            throw new BadRequestException("You have not liked this post");
         }
         
         logger.debug("Deleting like for user: {} on post: {}", user.getUsername(), post.getTitle());
@@ -107,14 +109,14 @@ public class LikeService {
         
         if (postId == null || postId <= 0) {
             logger.warn("Like users retrieval failed: Invalid post ID: {}", postId);
-            throw new IllegalArgumentException("Invalid post ID");
+            throw new BadRequestException("Invalid post ID");
         }
         
         logger.debug("Verifying post exists with ID: {}", postId);
         postRepository.findById(postId)
                 .orElseThrow(() -> {
                     logger.warn("Like users retrieval failed: Post not found with ID: {}", postId);
-                    return new IllegalArgumentException("Post not found");
+                    return ResourceNotFoundException.create("Post", "id", postId);
                 });
                 
         logger.debug("Fetching likes for post ID: {}", postId);
@@ -136,7 +138,7 @@ public class LikeService {
         
         if (postId == null || postId <= 0) {
             logger.warn("Like count retrieval failed: Invalid post ID: {}", postId);
-            throw new IllegalArgumentException("Invalid post ID");
+            throw new BadRequestException("Invalid post ID");
         }
         
         logger.debug("Counting likes for post ID: {}", postId);
@@ -150,7 +152,7 @@ public class LikeService {
         
         if (user == null) {
             logger.error("Failed to convert User to Summary DTO: User is null");
-            throw new IllegalArgumentException("User cannot be null");
+            throw new BadRequestException("User cannot be null");
         }
         
         logger.debug("Building UserSummaryDto for user ID: {}", user.getId());
