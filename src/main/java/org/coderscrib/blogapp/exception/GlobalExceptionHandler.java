@@ -1,9 +1,11 @@
 package org.coderscrib.blogapp.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
@@ -14,8 +16,10 @@ import java.util.Map;
  * Global exception handler for the application.
  * This class handles exceptions thrown by controllers and converts them to appropriate HTTP responses.
  */
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Handles ResourceNotFoundException and returns a 404 Not Found response.
@@ -27,7 +31,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
-        System.out.println("[DEBUG_LOG] Handling ResourceNotFoundException: " + ex.getMessage());
+        logger.debug("[DEBUG_LOG] Handling ResourceNotFoundException: {}", ex.getMessage());
         return createErrorResponse(ex, HttpStatus.NOT_FOUND, request);
     }
 
@@ -41,7 +45,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Object> handleBadRequestException(
             BadRequestException ex, WebRequest request) {
-        System.out.println("[DEBUG_LOG] Handling BadRequestException: " + ex.getMessage());
+        logger.debug("[DEBUG_LOG] Handling BadRequestException: {}", ex.getMessage());
         return createErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
@@ -55,7 +59,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<Object> handleConflictException(
             ConflictException ex, WebRequest request) {
-        System.out.println("[DEBUG_LOG] Handling ConflictException: " + ex.getMessage());
+        logger.debug("[DEBUG_LOG] Handling ConflictException: {}", ex.getMessage());
         return createErrorResponse(ex, HttpStatus.CONFLICT, request);
     }
 
@@ -69,7 +73,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BlogAppException.class)
     public ResponseEntity<Object> handleBlogAppException(
             BlogAppException ex, WebRequest request) {
-        System.out.println("[DEBUG_LOG] Handling BlogAppException: " + ex.getMessage());
+        logger.error("[DEBUG_LOG] Handling BlogAppException: {}", ex.getMessage(), ex);
         return createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
@@ -83,8 +87,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGlobalException(
             Exception ex, WebRequest request) {
-        System.out.println("[DEBUG_LOG] Handling general Exception: " + ex.getClass().getName() + ": " + ex.getMessage());
-        ex.printStackTrace(); // Print stack trace for debugging
+        logger.error("[DEBUG_LOG] Handling general Exception: {}: {}", ex.getClass().getName(), ex.getMessage(), ex);
         return createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 

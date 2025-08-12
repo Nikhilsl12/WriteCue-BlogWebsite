@@ -1,13 +1,12 @@
 spring.application.name=BlogApp
-spring.datasource.url=jdbc:postgresql://localhost:5432/your_database_name_here
-spring.datasource.username=your_username_here
-spring.datasource.password=your_password_here
+spring.datasource.url=jdbc:postgresql://localhost:5432/blogapplication
+spring.datasource.username=your_username
+spring.datasource.password=your_password
 spring.jpa.show-sql=true
 spring.jpa.hibernate.ddl-auto=update
-#spring.datasource.driver-class-name=org.postgresql.Driver
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
-app.base-url=https://www.coderscrib.tech
+app.base-url=your_base_url
 
 # Email Configuration
 spring.mail.host=smtp.gmail.com
