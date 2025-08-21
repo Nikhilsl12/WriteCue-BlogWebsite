@@ -5,6 +5,8 @@ import org.coderscrib.blogapp.dto.post.PostSummaryDto;
 import org.coderscrib.blogapp.dto.user.*;
 import org.coderscrib.blogapp.entity.User;
 import org.coderscrib.blogapp.exception.ResourceNotFoundException;
+import org.coderscrib.blogapp.exception.BadRequestException;
+import org.coderscrib.blogapp.exception.ConflictException;
 import org.coderscrib.blogapp.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +37,11 @@ public class UserService {
         
         if(userRepository.existsByUsername(dto.getUsername())){
             logger.warn("Registration failed: Username '{}' is already taken", dto.getUsername());
-            throw new IllegalArgumentException("Username is already taken!");
+            throw new ConflictException("Username is already taken!");
         }
         if(userRepository.existsByEmail(dto.getEmail())){
             logger.warn("Registration failed: Email '{}' is already in use", dto.getEmail());
-            throw new IllegalArgumentException("Email is already in use!");
+            throw new ConflictException("Email is already in use!");
         }
         
         User user = User.builder()
@@ -89,7 +91,7 @@ public class UserService {
         // Verify the password
         if (!passwordEncoder.matches(userLoginDto.getPassword(), user.get().getPassword())) {
             logger.warn("Login failed: Invalid password for user: {}", usernameOrEmail);
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new BadRequestException("Invalid username or password");
         }
 
         logger.info("User logged in successfully: {}, ID: {}", usernameOrEmail, user.get().getId());
@@ -113,7 +115,7 @@ public class UserService {
             if (!user.getUsername().equals(dto.getUsername()) &&
                     userRepository.existsByUsername(dto.getUsername())) {
                 logger.warn("Username update failed: Username '{}' is already taken", dto.getUsername());
-                throw new IllegalArgumentException("Username is already taken!");
+                throw new ConflictException("Username is already taken!");
             }
             user.setUsername(dto.getUsername());
             logger.debug("Username updated successfully");
@@ -125,7 +127,7 @@ public class UserService {
             if (!user.getEmail().equals(dto.getEmail()) &&
                     userRepository.existsByEmail(dto.getEmail())) {
                 logger.warn("Email update failed: Email '{}' is already in use", dto.getEmail());
-                throw new IllegalArgumentException("Email is already in use!");
+                throw new ConflictException("Email is already in use!");
             }
             user.setEmail(dto.getEmail());
             logger.debug("Email updated successfully");
@@ -216,7 +218,7 @@ public class UserService {
 
         if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
             logger.warn("Password change failed: Incorrect old password for user ID: {}", userId);
-            throw new IllegalArgumentException("Incorrect old password");
+            throw new BadRequestException("Incorrect old password");
         }
 
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
@@ -238,7 +240,7 @@ public class UserService {
         
         if (savedUser == null) {
             logger.error("Failed to convert User to DTO: User is null");
-            throw new IllegalArgumentException("User cannot be null");
+            throw new BadRequestException("User cannot be null");
         }
         
         UserResponseDto dto = new UserResponseDto();
